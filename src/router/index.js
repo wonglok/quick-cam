@@ -12,6 +12,13 @@ const routes = [
     name: 'Home',
     component: Home
   },
+
+  {
+    path: '/cam',
+    name: 'Cam',
+    // component: () => import(/* webpackChunkName: "secondary" */ '../quick-cam/Layout/IceCreamLayout.vue')
+    component: () => import('../quick-cam/CamPage/CamPage.vue')
+  },
   {
     path: '/ice-cream',
     name: 'IceCream',
