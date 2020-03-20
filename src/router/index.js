@@ -1,7 +1,9 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
+import Home from '../quick-cam/Layout/HomePageLayout.vue'
 
+// npm install --save @tweenjs/tween.js stats.js three vue-color
+// npm install --save @seregpie/three.text-texture expr-eval raw-loader
 Vue.use(VueRouter)
 
 const routes = [
@@ -9,6 +11,12 @@ const routes = [
     path: '/',
     name: 'Home',
     component: Home
+  },
+  {
+    path: '/ice-cream',
+    name: 'IceCream',
+    // component: () => import(/* webpackChunkName: "secondary" */ '../quick-cam/Layout/IceCreamLayout.vue')
+    component: () => import('../quick-cam/Layout/IceCreamLayout.vue')
   },
   {
     path: '/about',

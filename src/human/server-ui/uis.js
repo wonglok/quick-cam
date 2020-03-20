@@ -8,9 +8,9 @@
 var path = require('path')
 
 function importAll (r) {
-  let exporter = {}
+  const exporter = {}
   r.keys().forEach(key => {
-    let filename = path.basename(key).replace('.vue', '')
+    const filename = path.basename(key).replace('.vue', '')
     exporter[filename] = () => new Promise((resolve) => {
       resolve(r(key).default)
     })

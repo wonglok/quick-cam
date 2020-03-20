@@ -44,7 +44,7 @@ export default {
   },
   methods: {
     onUpdateColor (evt) {
-      for (let kn in evt.rgba) {
+      for (const kn in evt.rgba) {
         this.item.value[kn] = evt.rgba[kn]
       }
       this.app.updateLater(this.item)

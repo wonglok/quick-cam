@@ -108,7 +108,7 @@ export default {
       }
     },
     addGroup () {
-      let name = window.prompt('new group name')
+      const name = window.prompt('new group name')
       if (this.app.groupNames.includes(name)) {
         window.alert('Duplicated group name')
         return
@@ -129,7 +129,7 @@ export default {
       this.app.updateLater(item)
     },
     copyItem ({ item }) {
-      let name = window.prompt('new name?')
+      const name = window.prompt('new name?')
       if (name) {
         if (this.app.selected.groupItems.map(e => e.key).includes(name)) {
           window.alert('Duplicated group name')
@@ -153,7 +153,7 @@ export default {
         })
         return
       }
-      let name = window.prompt('keyname for inpput?')
+      const name = window.prompt('keyname for inpput?')
       if (name) {
         this.app.add({
           group: groupName,
@@ -164,7 +164,7 @@ export default {
       }
     },
     clone (gp) {
-      let name = window.prompt('new cloned group name?')
+      const name = window.prompt('new cloned group name?')
       if (this.app.groupNames.includes(name)) {
         window.alert('Duplicated group name')
         return
@@ -176,7 +176,7 @@ export default {
       // this.app.clone
     },
     changeName (gp) {
-      let name = window.prompt('new group name?')
+      const name = window.prompt('new group name?')
       if (this.app.groupNames.includes(name)) {
         window.alert('Duplicated group name')
         return
@@ -193,7 +193,7 @@ export default {
         }
         return
       }
-      let name = window.prompt('type this group name to remove it: ' + gp)
+      const name = window.prompt('type this group name to remove it: ' + gp)
       if (name === gp) {
         this.app.removeGroup(gp)
       }

@@ -1,11 +1,11 @@
 // Controllers
-let io = require('socket.io-client')
+const io = require('socket.io-client')
 function uniq (value, index, arr) {
   return arr.indexOf(value) === index
 }
-let getID = () => '_' + (Math.random() * 1000000).toFixed(0) + ''
+const getID = () => '_' + (Math.random() * 1000000).toFixed(0) + ''
 export const makeAPI = async ({ ui }) => {
-  let app = {
+  const app = {
     _: {
       space: {},
       selected: {
@@ -51,8 +51,9 @@ export const makeAPI = async ({ ui }) => {
     }
   }
 
-  let hostname = location.hostname
-  let socket = io(`http://${hostname}:2329`)
+  const hostname = location.hostname
+  const protocol = location.protocol
+  const socket = io(`${protocol}//${hostname}:2329`)
   app.socket = socket
 
   socket.emit('init-request', {}, (data) => {
@@ -81,7 +82,7 @@ export const makeAPI = async ({ ui }) => {
     socket.emit('up-remove', remover)
   }
   socket.on('down-remove', (remover) => {
-    let arr = app.data.objects
+    const arr = app.data.objects
     arr.splice(arr.findIndex(e => e.id === remover.id, 1), 1)
 
     if (!app.groupNames.includes(remover.group)) {
@@ -107,15 +108,15 @@ export const makeAPI = async ({ ui }) => {
     // if this isn't myself then update it
     if (app.editor !== editor) {
       console.log('updating')
-      let arr = app.data.objects
-      let idx = arr.findIndex(e => e.id === updater.id, 1)
+      const arr = app.data.objects
+      const idx = arr.findIndex(e => e.id === updater.id, 1)
       arr[idx] = updater
       ui.$forceUpdate()
     }
   })
 
   app.changeGroupName = (oldname, newname) => {
-    let items = app.list.filter(e => e.group === oldname)
+    const items = app.list.filter(e => e.group === oldname)
     items.forEach((item) => {
       item.group = newname
       app.updateNow(item)
@@ -123,8 +124,8 @@ export const makeAPI = async ({ ui }) => {
   }
 
   app.cloneGroupAndRename = (oldname, newname) => {
-    let items = app.list.filter(e => e.group === oldname)
-    let cloned = JSON.parse(JSON.stringify(items))
+    const items = app.list.filter(e => e.group === oldname)
+    const cloned = JSON.parse(JSON.stringify(items))
     cloned.forEach((item) => {
       item.id = getID()
       item.group = newname
@@ -133,7 +134,7 @@ export const makeAPI = async ({ ui }) => {
   }
 
   app.removeGroup = (gp) => {
-    let items = app.list.filter(e => e.group === gp)
+    const items = app.list.filter(e => e.group === gp)
     items.forEach((item) => {
       app.remove(item)
     })

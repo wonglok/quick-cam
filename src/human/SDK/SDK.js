@@ -1,8 +1,8 @@
 import { Vector3, Vector2, Color } from 'three'
-let waitGet = ({ getter }) => {
+const waitGet = ({ getter }) => {
   return new Promise((resolve) => {
-    let tout = setInterval(() => {
-      let res = getter()
+    const tout = setInterval(() => {
+      const res = getter()
       if (res) {
         clearInterval(tout)
         resolve(res)
@@ -13,7 +13,7 @@ let waitGet = ({ getter }) => {
 
 export const makeSDK = async () => {
   // let getID = () => '_' + (Math.random() * 1000000).toFixed(0) + ''
-  let sdk = {
+  const sdk = {
     ready: false,
     _: {
       pulses: {},
@@ -30,21 +30,22 @@ export const makeSDK = async () => {
     },
     // editor: getID(),
     sendPulse: (gp, kn) => {
-      let allPulses = sdk._.pulses
-      let allStubs = sdk._.stubs
-      let fn1 = allPulses[gp + '.' + kn] || (() => {})
+      const allPulses = sdk._.pulses
+      const allStubs = sdk._.stubs
+      const fn1 = allPulses[gp + '.' + kn] || (() => {})
       fn1()
 
-      for (let skn in allStubs) {
+      for (const skn in allStubs) {
         allStubs[skn]()
       }
     }
   }
   // code shake
   if (process.env.NODE_ENV === 'development') {
-    let io = require('socket.io-client')
-    let hostname = location.hostname
-    let socket = io(`http://${hostname}:2329`)
+    const io = require('socket.io-client')
+    const hostname = location.hostname
+    const protocol = location.protocol
+    const socket = io(`${protocol}//${hostname}:2329`)
     sdk.socket = socket
 
     socket.emit('init-request', {}, (data) => {
@@ -60,7 +61,7 @@ export const makeSDK = async () => {
     })
 
     socket.on('down-remove', (remover) => {
-      let arr = sdk.data.objects
+      const arr = sdk.data.objects
       arr.splice(arr.findIndex(e => e.id === remover.id, 1), 1)
       sdk.sendPulse(remover.group, remover.key)
     })
@@ -68,8 +69,8 @@ export const makeSDK = async () => {
     // UPDATE
     socket.on('down-update', ({ editor, updater }) => {
       // if this isn't myself then update it
-      let arr = sdk.data.objects
-      let idx = arr.findIndex(e => e.id === updater.id, 1)
+      const arr = sdk.data.objects
+      const idx = arr.findIndex(e => e.id === updater.id, 1)
       arr[idx] = updater
       sdk.sendPulse(updater.group, updater.key)
     })
@@ -87,12 +88,12 @@ export const makeSDK = async () => {
     sdk.ready = true
   }
 
-  let HolderCache = {}
-  let transformer = (obj, cacheKey) => {
+  const HolderCache = {}
+  const transformer = (obj, cacheKey) => {
     if (!obj || typeof obj.value === 'undefined') {
       return
     }
-    let val = obj.value
+    const val = obj.value
     if (obj.type === 'vec3') {
       // HolderCache[cacheKey] = HolderCache[cacheKey] || new Vector3(val.x, val.y, val.z)
       HolderCache[cacheKey] = new Vector3(val.x, val.y, val.z)
@@ -125,8 +126,8 @@ export const makeSDK = async () => {
     }
   }
 
-  let surge = (gpkn, streamFn, auto) => {
-    let obj = sdk.list.find(e => (e.group + '.' + e.key) === gpkn)
+  const surge = (gpkn, streamFn, auto) => {
+    const obj = sdk.list.find(e => (e.group + '.' + e.key) === gpkn)
     if (auto) {
       streamFn(transformer(obj, gpkn))
       return
@@ -146,11 +147,11 @@ export const makeSDK = async () => {
   }
 
   sdk.get = (gpkn) => {
-    let obj = sdk.list.find(e => (e.group + '.' + e.key) === gpkn)
+    const obj = sdk.list.find(e => (e.group + '.' + e.key) === gpkn)
     return obj
   }
   sdk.autoGet = (gpkn) => {
-    let obj = sdk.get(gpkn)
+    const obj = sdk.get(gpkn)
     return transformer(obj, gpkn)
   }
 
@@ -159,11 +160,11 @@ export const makeSDK = async () => {
       console.error(group, 'group not found')
     }
 
-    let makeStub = () => {
-      let stub = {}
-      let items = sdk.list.filter(e => e.group === group)
+    const makeStub = () => {
+      const stub = {}
+      const items = sdk.list.filter(e => e.group === group)
       items.forEach((item) => {
-        let gpkn = `${item.group}.${item.key}`
+        const gpkn = `${item.group}.${item.key}`
         stub[item.key] = transformer(item, gpkn)
         // Object.defineProperty(stub, item.key, { get: () => transformer(item, gpkn) })
         // Object.defineProperty(stub, item.key, { get: () => transformer(item, gpkn) })
@@ -184,20 +185,20 @@ export const makeSDK = async () => {
     return {
       proxy: new Proxy({}, {
         get (tempObj, kn) {
-          let obj = sdk.get(`${group}.${kn}`)
+          const obj = sdk.get(`${group}.${kn}`)
           return transformer(obj, `${group}.${kn}`)
         }
       }),
       autoGet: (kn) => {
         // let groupItems = sdk.list.filter(e => e.group === group)
-        let obj = sdk.get(`${group}.${kn}`)
+        const obj = sdk.get(`${group}.${kn}`)
         if (!obj) {
           console.error(`not found ${group}.${kn}`)
         }
         return transformer(obj, `${group}.${kn}`)
       },
       get: (kn) => {
-        let obj = sdk.get(`${group}.${kn}`)
+        const obj = sdk.get(`${group}.${kn}`)
         return obj
         // let groupItems = sdk.list.filter(e => e.group === group)
         // return groupItems.find(t => t.key === kn)
