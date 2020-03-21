@@ -10,12 +10,17 @@
         </div>
         <div class="text-xl cursor-pointer select-none px-2 py-1">🔑</div>
       </div>
+      <div v-if="notFound">
+        <div class="p-5 flex justify-center items-center text-2xl">
+          Cannot find room @{{slug}}
+        </div>
+      </div>
       <div v-if="room" class="full-minus-topbar">
-        <div v-if="room.enableViewPassword && showBlocker" class="full flex justify-center items-start">
+        <div v-if="room && room.enableViewPassword && showBlocker" class="full flex justify-center items-start">
           <div class="text-center pt-12">
             <div class=" text-2xl">Please enter viewer password.</div>
             <div class="">
-              <input type="password" class="bg-gray-200 p-2 w-full mt-3 text-black" @keydown.enter="getPhotosBySlug()" v-model="viewPassword">
+              <input type="password" class="bg-gray-200 p-2 w-full mt-3 text-black" @keydown.enter="getPhotosBySlug();" v-model="viewPassword">
               <button @click="getPhotosBySlug()" type="button" class="bg-gray-200 p-2 w-full mt-3 text-black">Enter</button>
             </div>
             <div v-if="failed" class="p-2 text-red-500">
@@ -61,7 +66,7 @@
                 <img class="snaponce" v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="apiURL + this.photos[this.photos.length - 1].photo.url" alt="">
               </div>
             </div>
-            <div class="snap-btn disable-dbl-tap-zoom" @click="snapOnce">
+            <div class="snap-btn disable-dbl-tap-zoom" @click="takePhoto">
             </div>
           </div>
         </div>
@@ -80,11 +85,12 @@ export default {
   },
   data () {
     return {
+      notFound: false,
       mode: 'normal',
       apiURL: cAPI.apiURL,
       photo: {
-        height: 128,
-        width: 128
+        height: 1024,
+        width: 1024
       },
       snapping: false,
       snaponce: false,
@@ -92,7 +98,7 @@ export default {
       showBlocker: false,
       failed: false,
       viewPassword: '',
-      room: null,
+      room: false,
       photos: false
     }
   },
@@ -152,7 +158,7 @@ export default {
 
       return data
     },
-    async snapOnce () {
+    async takePhoto () {
       this.snaponce = true
       const canvas = this.$refs.canvas
       const video = this.$refs.video
@@ -164,7 +170,65 @@ export default {
       if (width && height) {
         canvas.width = width
         canvas.height = height
-        context.drawImage(video, 0, 0, width, height)
+
+        /**
+         * By Ken Fyrstenberg Nilsen
+         *
+         * drawImageProp(context, image [, x, y, width, height [,offsetX, offsetY]])
+         *
+         * If image and context are only arguments rectangle will equal canvas
+        */
+        /* eslint-disable */
+        function drawImageProp(ctx, img, x, y, w, h, offsetX, offsetY) {
+
+            if (arguments.length === 2) {
+                x = y = 0;
+                w = ctx.canvas.width;
+                h = ctx.canvas.height;
+            }
+
+            // default offset is center
+            offsetX = typeof offsetX === "number" ? offsetX : 0.5;
+            offsetY = typeof offsetY === "number" ? offsetY : 0.5;
+
+            // keep bounds [0.0, 1.0]
+            if (offsetX < 0) offsetX = 0;
+            if (offsetY < 0) offsetY = 0;
+            if (offsetX > 1) offsetX = 1;
+            if (offsetY > 1) offsetY = 1;
+
+            var iw = img.videoWidth,
+                ih = img.videoHeight,
+                r = Math.min(w / iw, h / ih),
+                nw = iw * r,   // new prop. width
+                nh = ih * r,   // new prop. height
+                cx, cy, cw, ch, ar = 1;
+
+            // decide which gap to fill
+            if (nw < w) ar = w / nw;
+            if (Math.abs(ar - 1) < 1e-14 && nh < h) ar = h / nh;  // updated
+            nw *= ar;
+            nh *= ar;
+
+            // calc source rectangle
+            cw = iw / (nw / w);
+            ch = ih / (nh / h);
+
+            cx = (iw - cw) * offsetX;
+            cy = (ih - ch) * offsetY;
+
+            // make sure source rectangle is valid
+            if (cx < 0) cx = 0;
+            if (cy < 0) cy = 0;
+            if (cw > iw) cw = iw;
+            if (ch > ih) ch = ih;
+
+            // fill image in dest. rectangle
+            ctx.drawImage(img, cx, cy, cw, ch,  x, y, w, h);
+        }
+        /* eslint-enable */
+        drawImageProp(context, video, 0, 0, width, height)
+        // context.drawImage(video, 0, 0, width, height)
 
         canvas.toBlob(async (blob) => {
           this.snaponce = false
@@ -189,7 +253,7 @@ export default {
       }
     },
     async openCamera () {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 512 }, height: { ideal: 512 } }, audio: false })
+      this.stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1920 } }, audio: false })
       this.requestCamera = false
       this.$nextTick(() => {
         this.$refs.video.srcObject = this.stream
@@ -197,9 +261,18 @@ export default {
       })
     },
     async loadRoom () {
-      const room = await cAPI.getAlbumBySlug({ slug: this.slug })
-      this.room = room
-      this.showBlocker = room.enableViewPassword
+      await cAPI.getAlbumBySlug({ slug: this.slug })
+        .then((room) => {
+          this.room = room
+          if (room) {
+            this.showBlocker = room.enableViewPassword
+          } else {
+            this.notFound = true
+          }
+        }, () => {
+          this.notFound = true
+          return false
+        })
     },
     async getPhotosBySlug () {
       try {
@@ -207,6 +280,7 @@ export default {
         this.photos = await cAPI.getPhotosBySlug({ slug: this.slug, viewPassword: this.viewPassword })
         console.log(this.photos)
         this.showBlocker = false
+        this.$nextTick(this.openCamera)
       } catch (e) {
         this.failed = true
       }

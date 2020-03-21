@@ -3,7 +3,7 @@
     <div class="wrapper">
       <div class="text-xl p-2 bg-gray-600 text-white flex justify-between items-center lg:text-4xl">
         <div class="text-lg">📸 Group Cam 📷 </div>
-        <div class="text-lg cursor-pointer select-none border px-2 py-1 lg:text-2xl" @click="$router.push('/create-room')">Create Room</div>
+        <div class="text-lg cursor-pointer select-none border px-2 py-1" @click="$router.push('/create-room')">Create Room</div>
       </div>
       <div class="text-2xl p-2 py-2">Search My Room</div>
       <div class="px-2">
