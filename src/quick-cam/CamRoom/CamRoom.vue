@@ -40,7 +40,7 @@
               <div class="flex flex-wrap">
                 <div :key="photo._id" v-for="(photo) in photos.slice()" class="inline-flex items-center relative">
                   <div v-if="photo.photo && photo.type !== 'uploading'" class="h-32 w-32 object-cover relative">
-                    <img class="h-32 w-32 object-cover" :src="`${getThumbLink(photo)}`" alt="">
+                    <a target="_blank" :href="`${getImageShareLink(photo)}`"><img class="h-32 w-32 object-cover" :src="`${getThumbLink(photo)}`" alt=""></a>
                     <button class="absolute text-white rounded-lg bg-red-500 bottom-0 right-0 select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">X</button>
                   </div>
                   <img class="h-32 w-32 object-cover" :style="{ background: 'rgba(0,0,0,0.5)' }" v-if="photo.type === 'uploading'" :src="`${getImageLink(photo)}`" alt="">
@@ -67,8 +67,8 @@
             <canvas ref="thumb" style="display: none"></canvas>
             <div class="last-photo disable-dbl-tap-zoom" @click="showGallery = true">
               <div class="" v-if="photos && photos.length > 0">
-                <img class="snaponce" v-if="this.photos[this.photos.length - 1].type === 'uploading'" :src="getImageLink(this.photos[this.photos.length - 1])" alt="">
-                <img class="snaponce" v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="getImageLink(this.photos[this.photos.length - 1])" alt="">
+                <img class="snaponce" v-if="this.photos[this.photos.length - 1].type === 'uploading'" :src="getThumbLink(this.photos[this.photos.length - 1])" alt="">
+                <img class="snaponce" v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="getThumbLink(this.photos[this.photos.length - 1])" alt="">
               </div>
             </div>
             <div class="snap-btn disable-dbl-tap-zoom" @click="takePhoto">
@@ -129,6 +129,9 @@ export default {
     // this.getPhotosBySlug()
   },
   methods: {
+    getImageShareLink (item) {
+      return `${cAPI.apiURL}${item.photo.url}`
+    },
     logout () {
       this.viewPassword = ''
       this.$forceUpdate()
