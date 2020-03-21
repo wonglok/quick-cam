@@ -40,7 +40,7 @@
                   Loading
                 </div>
                 <div v-if="photo.type !== 'uploading'">
-                  <button class="disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">Delete</button>
+                  <button class=" select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">Delete</button>
                   <input type="checkbox" v-model="photo.selected" v-if="mode === 'selecting'" @input="$nextTick($forceUpdate)">
                 </div>
               </div>
@@ -48,15 +48,15 @@
             </div>
           </div>
           <div class="flex justify-center full relative" v-show="!requestCamera">
-            <video class="h-full w-full max-w-sm object-cover bg-gray-200 lg:m-3" :class="{ snapping: snapping, snaponce: snaponce }" playsinline ref="video"></video>
+            <video class="h-full w-full max-w-lg object-cover bg-gray-200" :class="{ snapping: snapping, snaponce: snaponce }" playsinline ref="video"></video>
             <canvas ref="canvas" style="display: none"></canvas>
-            <div class="last-photo" v-if="photos && photos.length > 0" @click="requestCamera = true">
-              <!-- <img class="h-32 w-32 object-cover" v-if="photo.photo && " :src="`${apiURL}${photo.photo.url}`" alt="">
-              <img class="h-32 w-32 object-cover" v-if="photo.type === 'uploading'" :src="`${photo.blobURL}`" alt=""> -->
-              <img v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type === 'uploading'" :src="this.photos[this.photos.length - 1].blobURL" alt="">
-              <img v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="apiURL + this.photos[this.photos.length - 1].photo.url" alt="">
+            <div class="last-photo disable-dbl-tap-zoom" @click="requestCamera = true">
+              <div class="" v-if="photos && photos.length > 0" >
+                <img v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type === 'uploading'" :src="this.photos[this.photos.length - 1].blobURL" alt="">
+                <img v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="apiURL + this.photos[this.photos.length - 1].photo.url" alt="">
+              </div>
             </div>
-            <div class="snap-btn" @click="snapOnce">
+            <div class="snap-btn disable-dbl-tap-zoom" @click="snapOnce">
             </div>
           </div>
         </div>
@@ -240,5 +240,28 @@ export default {
 }
 .snap-btn:focus{
   outline: none;
+}
+
+.disable-dbl-tap-zoom:focus{
+  outline: none;
+}
+.disable-dbl-tap-zoom {
+  user-select: none;
+  touch-action: manipulation;
+}
+
+@keyframes snap {
+  0%{
+    opacity: 0.25;
+  }
+  100%{
+    opacity: 1;
+  }
+}
+.snapping{
+  animation: snap 0.15s linear 0s infinite normal both;
+}
+.snaponce{
+  animation: snap 0.15s linear 0s 1 normal both;
 }
 </style>
