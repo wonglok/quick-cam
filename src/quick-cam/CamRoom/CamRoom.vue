@@ -20,27 +20,29 @@
           <div class="text-center pt-12">
             <div class=" text-2xl">Please enter viewer password.</div>
             <div class="">
-              <input type="password" class="bg-gray-200 p-2 w-full mt-3 text-black" @keydown.enter="getPhotosBySlug();" v-model="viewPassword">
+              <input type="password" class="bg-gray-200 p-2 w-full mt-3 text-black" @keydown.enter="getPhotosBySlug();" v-model="viewPassword" @input="viewPassword = $event.target.value">
               <button @click="getPhotosBySlug()" type="button" class="bg-gray-200 p-2 w-full mt-3 text-black">Enter</button>
             </div>
-            <div v-if="failed" class="p-2 text-red-500">
+            <div v-if="wrongPassword" class="p-2 text-red-500">
               Wrong Password
             </div>
           </div>
         </div>
         <div v-if="!showBlocker" class="full">
-          <div v-if="requestCamera" >
+          <div v-if="showGallery">
             <div class="open-cam p-5 flex justify-center">
-              <button @click="openCamera" class="border border-gray-300 p-4 py-2 text-xl">Open Camera 📸</button>
+              <button @click="openCamera" class="m-1 border border-gray-300 p-4 py-2 text-xl">Open Camera 📸</button>
+              <button @click="logout" class="m-1 border border-gray-300 p-4 py-2 text-xl">Logout 🔐</button>
             </div>
             <div class="p-2">
               <div class="flex flex-wrap">
-                <div :key="photo._id" v-for="(photo) in photos.slice()" class="inline-flex items-center">
+                <div :key="photo._id" v-for="(photo) in photos.slice()" class="inline-flex items-center relative">
                   <div v-if="photo.photo && photo.type !== 'uploading'" class="h-32 w-32 object-cover relative">
-                    <img class="" :src="`${apiURL}${photo.photo.url}`" alt="">
+                    <img class="" :src="`${getImageLink(photo)}`" alt="">
                     <button class="absolute text-white rounded-lg bg-red-500 bottom-0 right-0 select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">X</button>
                   </div>
-                  <img class="h-32 w-32 object-cover opacity-50" v-if="photo.type === 'uploading'" :src="`${photo.blobURL}`" alt="">
+                  <img class="h-32 w-32 object-cover" :style="{ background: 'rgba(0,0,0,0.5)' }" v-if="photo.type === 'uploading'" :src="`${getImageLink(photo)}`" alt="">
+                  <div class="w-32 absolute bottom-0 left-0" :style="{ background: 'rgba(255,255,255,0.5)', height: `${8 * photo.opacity}rem` }"></div>
                   <div v-if="photo.type === 'rendering'">
                     Making GIF
                   </div>
@@ -57,13 +59,13 @@
               </div>
             </div>
           </div>
-          <div class="flex justify-center full relative" v-show="!requestCamera">
+          <div class="flex justify-center full relative" v-show="!showGallery">
             <video class="h-full w-full object-cover bg-gray-200" :class="{ snapping: snapping, snaponce: snaponce }" playsinline ref="video"></video>
             <canvas ref="canvas" style="display: none"></canvas>
-            <div class="last-photo disable-dbl-tap-zoom" @click="requestCamera = true">
+            <div class="last-photo disable-dbl-tap-zoom" @click="showGallery = true">
               <div class="" v-if="photos && photos.length > 0">
-                <img class="snaponce" v-if="this.photos[this.photos.length - 1].type === 'uploading'" :src="this.photos[this.photos.length - 1].blobURL" alt="">
-                <img class="snaponce" v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="apiURL + this.photos[this.photos.length - 1].photo.url" alt="">
+                <img class="snaponce" v-if="this.photos[this.photos.length - 1].type === 'uploading'" :src="getImageLink(this.photos[this.photos.length - 1])" alt="">
+                <img class="snaponce" v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="getImageLink(this.photos[this.photos.length - 1])" alt="">
               </div>
             </div>
             <div class="snap-btn disable-dbl-tap-zoom" @click="takePhoto">
@@ -85,31 +87,54 @@ export default {
   },
   data () {
     return {
+      viewPassword: '',
       notFound: false,
       mode: 'normal',
-      apiURL: cAPI.apiURL,
       photo: {
         height: 1024,
         width: 1024
       },
       snapping: false,
       snaponce: false,
-      requestCamera: true,
+      showGallery: true,
       showBlocker: false,
-      failed: false,
-      viewPassword: '',
+      wrongPassword: false,
+
       room: false,
       photos: false
     }
   },
+  watch: {
+    viewPassword () {
+      if (this.room) {
+        sessionStorage.setItem('viewPassword@' + this.room._id, this.viewPassword)
+      }
+    }
+  },
   async mounted () {
     await this.loadRoom()
+    this.viewPassword = sessionStorage.getItem('viewPassword@' + this.room._id) || ''
+    if (this.viewPassword) {
+      this.getPhotosBySlug()
+    }
 
     // debug
     // this.viewPassword = '1234'
     // this.getPhotosBySlug()
   },
   methods: {
+    logout () {
+      this.viewPassword = ''
+      this.$forceUpdate()
+      this.showBlocker = true
+    },
+    getImageLink (photo) {
+      if (photo.blobURL) {
+        return photo.blobURL
+      } else {
+        return `${cAPI.apiURL}${photo.photo.url}`
+      }
+    },
     async startSelect () {
       this.mode = 'selecting'
       this.photos.forEach((data) => {
@@ -236,25 +261,28 @@ export default {
             type: 'uploading',
             _id: Math.random(),
             progress: 0,
+            opacity: 0,
             blobURL: URL.createObjectURL(new Blob([blob], { type: 'image/jpeg' }))
           }
           this.photos.push(obj)
           const progress = (v) => {
             obj.progress = (v * 100) + '%'
+            obj.opacity = v + 0.1
             this.$forceUpdate()
           }
           const data = await cAPI.uploadPhoto({ name: 'loklok', blob, albumID: this.room._id, progress })
           const idx = this.photos.findIndex(p => p._id === obj._id)
+          data.blobURL = obj.blobURL
           this.photos[idx] = data
           console.log(data)
           this.$forceUpdate()
           // await this.getPhotosBySlug()
-        }, 'image/jpeg', 1)
+        }, 'image/jpeg', 0.2)
       }
     },
     async openCamera () {
       this.stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1920 } }, audio: false })
-      this.requestCamera = false
+      this.showGallery = false
       this.$nextTick(() => {
         this.$refs.video.srcObject = this.stream
         this.$refs.video.play()
@@ -276,13 +304,13 @@ export default {
     },
     async getPhotosBySlug () {
       try {
-        this.failed = false
+        this.wrongPassword = false
         this.photos = await cAPI.getPhotosBySlug({ slug: this.slug, viewPassword: this.viewPassword })
         console.log(this.photos)
         this.showBlocker = false
         this.$nextTick(this.openCamera)
       } catch (e) {
-        this.failed = true
+        this.wrongPassword = true
       }
     }
   }
