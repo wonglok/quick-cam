@@ -51,8 +51,8 @@
             <video class="h-full w-full max-w-lg object-cover bg-gray-200" :class="{ snapping: snapping, snaponce: snaponce }" playsinline ref="video"></video>
             <canvas ref="canvas" style="display: none"></canvas>
             <div class="last-photo disable-dbl-tap-zoom" @click="requestCamera = true">
-              <div class="" v-if="photos && photos.length > 0" >
-                <img v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type === 'uploading'" :src="this.photos[this.photos.length - 1].blobURL" alt="">
+              <div class="" v-if="photos && photos.length > 0">
+                <img v-if="this.photos[this.photos.length - 1].type === 'uploading'" :src="this.photos[this.photos.length - 1].blobURL" alt="">
                 <img v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="apiURL + this.photos[this.photos.length - 1].photo.url" alt="">
               </div>
             </div>

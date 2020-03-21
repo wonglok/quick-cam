@@ -15,7 +15,6 @@
     <button class="disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'selecting'" @click="removeSelected()">Remove Selected</button>
     <div class="">
       <video v-show="takePhoto" class="h-64 w-64 object-cover" :class="{ snapping: snapping, snaponce: snaponce }" playsinline ref="video"></video>
-      <canvas ref="canvas" style="display: none"></canvas>
       <div class="flex flex-wrap">
         <div :key="photo._id" v-for="(photo) in photos" class="flex items-center">
           <img class="h-32 w-32 object-cover" v-if="photo.photo && photo.type !== 'uploading'" :src="`${apiURL}${photo.photo.url}`" alt="">
@@ -33,7 +32,7 @@
         </div>
       </div>
     </div>
-
+    <canvas ref="canvas" style="display: none"></canvas>
   </div>
 </template>
 
