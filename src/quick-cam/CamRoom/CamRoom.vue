@@ -36,14 +36,14 @@
               <button @click="openCamera" class="m-1 border border-gray-300 p-4 py-2 text-xl">Camera 📸</button>
               <button @click="logout" class="m-1 border border-gray-300 p-4 py-2 text-xl">Logout</button>
               <button v-if="!canDelete" @click="canDelete = !canDelete" class="m-1 border border-gray-300 p-4 py-2 text-xl">Delete</button>
-              <button v-if="canDelete" @click="canDelete = !canDelete" class="m-1 border border-gray-300 p-4 py-2 text-xl">Back</button>
+              <button v-if="canDelete" @click="canDelete = !canDelete" class="m-1 border border-gray-300 p-4 py-2 text-xl">Protect</button>
             </div>
             <div class="p-2">
               <div class="flex flex-wrap">
                 <div :key="photo._id" v-for="(photo) in photos.slice().reverse()" class="inline-flex items-center relative">
                   <div v-if="photo.photo && photo.type !== 'uploading'" class="h-32 w-32 object-cover relative">
                     <a target="_blank" :href="`${getImageShareLink(photo)}`"><img class="h-32 w-32 object-cover" :src="`${getThumbLink(photo)}`" alt=""></a>
-                    <button class="absolute text-white rounded-lg bg-red-500 bottom-0 right-0 select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal' && canDelete" @click="removePhoto({ photo, photos })">X</button>
+                    <button class="absolute text-white rounded-lg bg-red-200 bottom-0 right-0 select-none disable-dbl-tap-zoom p-2 m-2" v-if="mode === 'normal' && canDelete" @click="removePhoto({ photo, photos })">❌</button>
                   </div>
                   <img class="h-32 w-32 object-cover" :style="{ background: 'rgba(0,0,0,0.5)' }" v-if="photo.type === 'uploading'" :src="`${getImageLink(photo)}`" alt="">
                   <div class="w-32 absolute bottom-0 left-0" :style="{ background: 'rgba(255,255,255,0.5)', height: `${8 * photo.opacity}rem` }"></div>
