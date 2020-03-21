@@ -357,7 +357,9 @@ export default {
           console.log('same, add')
         } else {
           console.log('add-album-item', data)
-          this.photos.push(data)
+          if (!this.photos.map(e => e._id).includes(data._id)) {
+            this.photos.push(data)
+          }
         }
       })
       this.socket.on('remove-album-item', (data, socketID) => {
