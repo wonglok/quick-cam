@@ -21,6 +21,7 @@
     "@tweenjs/tween.js": "^18.5.0",
     "axios": "^0.19.2",
     "expr-eval": "^2.0.2",
+    "gifshot": "^0.4.5",
     "stats.js": "^0.17.0",
     "tailwindcss": "^1.2.0",
     "three": "^0.114.0",

@@ -7,17 +7,21 @@
     <button class="disable-dbl-tap-zoom p-2 border m-1" @click="getPhotosBySlug">getPhotosBySlug</button>
     <button class="disable-dbl-tap-zoom p-2 border m-1" @click="openCamera">openCamera</button>
     <button class="disable-dbl-tap-zoom p-2 border m-1" v-if="takePhoto" @click="takePhoto">takePhoto</button>
+    <button class="disable-dbl-tap-zoom p-2 border m-1" v-if="takeGif" @click="takeGif">takeGif</button>
 
     <button class="disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="startSelect()">Select</button>
     <button class="disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="selectAll()">Select All</button>
     <button class="disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'selecting'" @click="cancelSelect()">Cancel Select</button>
     <button class="disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'selecting'" @click="removeSelected()">Remove Selected</button>
     <div class="">
-      <video v-show="takePhoto" class="h-64 w-64 object-cover" playsinline ref="video"></video>
+      <video v-show="takePhoto" class="h-64 w-64 object-cover" :class="{ snapping: snapping, snaponce: snaponce }" playsinline ref="video"></video>
       <div class="flex flex-wrap">
         <div :key="photo._id" v-for="(photo) in photos" class="flex items-center">
           <img class="h-32 w-32 object-cover" v-if="photo.photo && photo.type !== 'uploading'" :src="`${apiURL}${photo.photo.url}`" alt="">
           <img class="h-32 w-32 object-cover" v-if="photo.type === 'uploading'" :src="`${photo.blobURL}`" alt="">
+          <div v-if="photo.type === 'rendering'">
+            Making GIF
+          </div>
           <div v-if="photo.type === 'uploading'">
             Loading
           </div>
@@ -34,12 +38,16 @@
 
 <script>
 import * as API from '../api/cAPI.js'
+import gifshot from 'gifshot'
 export default {
   data () {
     return {
+      snaponce: false,
+      snapping: false,
       loading: false,
       apiURL: API.apiURL,
       photos: [],
+      takeGif: false,
       takePhoto: false,
       mode: 'normal'
     }
@@ -129,8 +137,8 @@ export default {
       console.log(data)
     },
     async openCamera () {
-      var height = 512
-      var width = 512
+      var height = 256
+      var width = 256
       const canvas = this.$refs['canvas']
       const video = this.$refs['video']
 
@@ -158,6 +166,7 @@ export default {
       }, false)
       const album = await API.getAlbumBySlug({ slug: 'wonglok831' })
       const takePhoto = async () => {
+        this.snaponce = true
         var context = canvas.getContext('2d')
         context.fillStyle = '#AAA'
         context.fillRect(0, 0, canvas.width, canvas.height)
@@ -167,6 +176,7 @@ export default {
           context.drawImage(video, 0, 0, width, height)
 
           canvas.toBlob(async (blob) => {
+            this.snaponce = false
             const obj = {
               type: 'uploading',
               _id: Math.random(),
@@ -186,6 +196,66 @@ export default {
         console.log('123')
       }
       this.takePhoto = takePhoto
+      const makeSnap = () => {
+        var context = canvas.getContext('2d')
+        context.fillStyle = '#AAA'
+        context.fillRect(0, 0, canvas.width, canvas.height)
+        canvas.width = width
+        canvas.height = height
+        context.drawImage(video, 0, 0, width, height)
+
+        // const image = new Image()
+        // image.src =
+        return canvas.toDataURL('image/jpg', 1.0)
+      }
+
+      const uploadGif = async (blob, tempObj) => {
+        tempObj.tpye = 'uploading'
+        tempObj.blobURL = URL.createObjectURL(new Blob([blob], { type: 'image/gif' }))
+        const progress = (v) => console.log(v)
+        const data = await API.uploadPhoto({ name: 'lok lok', filename: 'image.gif', blob, albumID: album._id, progress })
+        this.loading = true
+        const idx = this.photos.findIndex(p => p._id === tempObj._id)
+        this.photos[idx] = data
+        // await this.getPhotosBySlug()
+        this.loading = false
+      }
+      const takeGif = async () => {
+        this.snapping = true
+        const gif = []
+        const makeGif = () => {
+          const tempObj = {
+            type: 'rendering',
+            _id: Math.random(),
+            blobURL: false
+          }
+          this.photos.push(tempObj)
+          gifshot.createGIF({
+            gifWidth: width,
+            gifHeight: height,
+            images: gif
+          }, (result) => {
+            console.log(result)
+            const blob = API.dataURItoBlob(result.image)
+            uploadGif(blob, tempObj)
+          })
+        }
+        const loop = () => {
+          gif.push(
+            makeSnap()
+          )
+          if (gif.length < 30) {
+            console.log('add more', gif.length)
+            setTimeout(loop, 30)
+          } else {
+            this.snapping = false
+            console.log('make gif', gif)
+            makeGif(gif)
+          }
+        }
+        loop()
+      }
+      this.takeGif = takeGif
     }
   }
 }
@@ -198,5 +268,20 @@ export default {
 .disable-dbl-tap-zoom {
   user-select: none;
   touch-action: manipulation;
+}
+
+@keyframes snap {
+  0%{
+    opacity: 0.25;
+  }
+  100%{
+    opacity: 1;
+  }
+}
+.snapping{
+  animation: snap 0.15s linear 0s infinite normal both;
+}
+.snaponce{
+  animation: snap 0.15s linear 0s 1 normal both;
 }
 </style>

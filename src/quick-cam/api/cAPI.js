@@ -65,34 +65,34 @@ export const getAlbumBySlug = async (input) => {
   }
 }
 
-// function dataURItoBlob (dataURI) {
-//   // convert base64 to raw binary data held in a string
-//   // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-//   var byteString = atob(dataURI.split(',')[1])
+export function dataURItoBlob (dataURI) {
+  // convert base64 to raw binary data held in a string
+  // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+  var byteString = atob(dataURI.split(',')[1])
 
-//   // separate out the mime component
-//   var mimeString = dataURI.split(',')[0].split(':')[1].split('')[0]
+  // separate out the mime component
+  var mimeString = dataURI.split(',')[0].split(':')[1].split('')[0]
 
-//   // write the bytes of the string to an ArrayBuffer
-//   var ab = new ArrayBuffer(byteString.length)
-//   var ia = new Uint8Array(ab)
-//   for (var i = 0; i < byteString.length; i++) {
-//     ia[i] = byteString.charCodeAt(i)
-//   }
+  // write the bytes of the string to an ArrayBuffer
+  var ab = new ArrayBuffer(byteString.length)
+  var ia = new Uint8Array(ab)
+  for (var i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i)
+  }
 
-//   // Old Code
-//   // write the ArrayBuffer to a blob, and you're done
-//   // var bb = new BlobBuilder()
-//   // bb.append(ab)
-//   // return bb.getBlob(mimeString)
+  // Old Code
+  // write the ArrayBuffer to a blob, and you're done
+  // var bb = new BlobBuilder()
+  // bb.append(ab)
+  // return bb.getBlob(mimeString)
 
-//   // New Code
-//   return new Blob([ab], { type: mimeString })
-// }
+  // New Code
+  return new Blob([ab], { type: mimeString })
+}
 
-export const uploadPhoto = async ({ name, blob, albumID, progress = () => {} }) => {
+export const uploadPhoto = async ({ name, blob, albumID, filename = 'image.jpg', progress = () => {} }) => {
   const formData = new FormData()
-  formData.append(`files.photo`, new File([blob], 'image.jpg'), 'image.jpg')
+  formData.append(`files.photo`, new File([blob], filename), filename)
   formData.append(`data`, JSON.stringify({
     desc: 'desc',
     albumID: albumID,
