@@ -197,9 +197,9 @@ export default {
             if (offsetX > 1) offsetX = 1;
             if (offsetY > 1) offsetY = 1;
 
-            var iw = img.videoWidth,
-                ih = img.videoHeight,
-                r = Math.min(w / iw, h / ih),
+            var iw = img.videoWidth || img.width
+            var ih = img.videoHeight || img.height
+            var r = Math.min(w / iw, h / ih),
                 nw = iw * r,   // new prop. width
                 nh = ih * r,   // new prop. height
                 cx, cy, cw, ch, ar = 1;
