@@ -3,12 +3,14 @@
     <div class="wrapper full">
       <div class="topbar text-xl p-2 bg-teal-600 text-white flex justify-between items-center">
         <div class="">
-          <span class="mr-2" @click="$router.push('/')">🏠</span>
+          <span class="mr-2" v-if="!showGallery" @click="showGallery = true">🏠</span>
         </div>
         <div class="w-full text-center overflow-visible">
           <span class="text-lg">@{{slug}}</span>
         </div>
-        <div class="text-xl cursor-pointer select-none px-2 py-1">🔑</div>
+        <div>
+          <div v-if="false" class="text-xl cursor-pointer select-none px-2 py-1">🔑</div>
+        </div>
       </div>
       <div v-if="notFound">
         <div class="p-5 flex justify-center items-center text-2xl">
