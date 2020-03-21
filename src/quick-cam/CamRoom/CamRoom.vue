@@ -144,8 +144,10 @@ export default {
     getThumbLink (item) {
       if (item.blobURL) {
         return item.blobURL
-      } else {
+      } else if (item.thumb) {
         return `${cAPI.apiURL}${item.thumb.url}`
+      } else if (item.photo) {
+        return `${cAPI.apiURL}${item.photo.url}`
       }
     },
     async startSelect () {
