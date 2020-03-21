@@ -8,18 +8,21 @@
 var path = require('path')
 const exporter = {}
 
-function importAll (r) {
+async function importAll (r) {
   r.keys().forEach(key => {
     const filename = path.basename(key).replace('.vue', '')
     exporter[filename] = () => new Promise((resolve) => {
+      // r(key).then((mod) => {
+      //   resolve(mod.default)
+      // })
       resolve(r(key).default)
     })
   })
   return exporter
 }
 
-importAll(require.context('./ReusableGraphics', true, /\.vue$/))
-importAll(require.context('./HomePage', true, /\.vue$/))
-importAll(require.context('./IceCreamPage', true, /\.vue$/))
+importAll(require.context('./ReusableGraphics', true, /\.vue$/, 'sync'))
+importAll(require.context('./HomePage', true, /\.vue$/, 'sync'))
+importAll(require.context('./IceCreamPage', true, /\.vue$/, 'sync'))
 
 export default exporter

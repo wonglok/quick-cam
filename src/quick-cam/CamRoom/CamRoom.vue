@@ -30,7 +30,7 @@
             </div>
             <div class="p-2">
               <div class="flex flex-wrap">
-                <div :key="photo._id" v-for="(photo) in photos" class="inline-flex items-center">
+                <div :key="photo._id" v-for="(photo) in photos.slice()" class="inline-flex items-center">
                   <div v-if="photo.photo && photo.type !== 'uploading'" class="h-32 w-32 object-cover relative">
                     <img class="" :src="`${apiURL}${photo.photo.url}`" alt="">
                     <button class="absolute text-white rounded-lg bg-red-500 bottom-0 right-0 select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">X</button>
@@ -130,7 +130,7 @@ export default {
 
       const photoSelected = this.photos.filter(e => e.selected).slice()
       this.photos.filter(e => e.selected).forEach((photo) => {
-        const idx = this.photos.find(e => e._id === photo._id)
+        const idx = this.photos.findIndex(e => e._id === photo._id)
         this.photos.splice(idx, 1)
       })
 
@@ -140,9 +140,9 @@ export default {
         viewPassword: this.viewPassword
       })
     },
-    async removePhoto ({ photo, photos }) {
-      const idx = photos.find(e => e._id === photo._id)
-      photos.splice(idx, 1)
+    async removePhoto ({ photo }) {
+      const idx = this.photos.findIndex(e => e._id === photo._id)
+      this.photos.splice(idx, 1)
 
       const data = await cAPI.removePhotosIn({
         photoIDs: [photo._id],
