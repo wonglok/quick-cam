@@ -1,3 +1,6 @@
+import io from 'socket.io-client'
+// import P2P from 'socket.io-p2p'
+
 export var guiURL = `https://madeforyouapp.com`
 export var apiURL = `https://quick-cam-api.madeforyouapp.com`
 export var remoteURL = guiURL
@@ -6,6 +9,44 @@ if (process.env.NODE_ENV === 'development') {
   apiURL = `http://` + location.hostname + ':1337'
   remoteURL = `${location.protocol}//${location.host}`
 }
+
+export const getSocketAdapter = () => {
+  const NSIO = io(apiURL + '/cam', {
+    autoConnect: false,
+    transports: ['websocket']
+  })
+  const retry = () => {
+    NSIO.disconnect()
+    const tout = setInterval(() => {
+      if (!NSIO.connected) {
+        NSIO.open()
+      } else {
+        clearInterval(tout)
+      }
+    }, 1000)
+  }
+  NSIO.on('error', retry)
+  // NSIO.on('reconnect_error', retry)
+  // NSIO.on('reconnect_failed', retry)
+  // NSIO.on('disconnect', retry)
+  NSIO.open()
+
+  // const p2p = new P2P(NSIO)
+  const onReady = () => {
+    return new Promise((resolve) => {
+      NSIO.on('connection', (socket) => {
+        resolve(socket)
+      })
+    })
+  }
+  return {
+    socket: NSIO,
+    onReady
+    // p2p
+  }
+}
+
+getSocketAdapter()
 
 const BaBam = async (args) => {
   const axios = (await import('axios')).default
@@ -50,6 +91,33 @@ export const login = async ({ album, password }) => {
     }
   })
   return output
+}
+
+export const eqSlug = async (input) => {
+  // http://localhost:1337/albums?slug_contains=awo
+  const output = await BaBam({
+    method: 'GET',
+    baseURL: apiURL,
+    url: `/albums/?slug_eq=${encodeURIComponent(input.query.toLowerCase())}`
+  })
+  if (output) {
+    return output
+  } else {
+    return false
+  }
+}
+export const searchSlug = async (input) => {
+  // http://localhost:1337/albums?slug_contains=awo
+  const output = await BaBam({
+    method: 'GET',
+    baseURL: apiURL,
+    url: `/albums/?slug_contains=${encodeURIComponent(input.query)}`
+  })
+  if (output) {
+    return output
+  } else {
+    return false
+  }
 }
 
 export const getAlbumBySlug = async (input) => {
