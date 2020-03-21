@@ -22,7 +22,7 @@
           <div class="text-center pt-12">
             <div class=" text-2xl">Please enter viewer password.</div>
             <div class="">
-              <input type="password" class="bg-gray-200 p-2 w-full mt-3 text-black" @keydown.enter="getPhotosBySlug();" v-model="viewPassword" @input="viewPassword = $event.target.value">
+              <input autofocus type="password" class="bg-gray-200 p-2 w-full mt-3 text-black" @keydown.enter="getPhotosBySlug();" v-model="viewPassword" @input="viewPassword = $event.target.value">
               <button @click="getPhotosBySlug()" type="button" class="bg-gray-200 p-2 w-full mt-3 text-black">Enter</button>
             </div>
             <div v-if="wrongPassword" class="p-2 text-red-500">
