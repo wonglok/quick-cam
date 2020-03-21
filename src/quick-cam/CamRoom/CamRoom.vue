@@ -30,26 +30,26 @@
             </div>
             <div class="p-2">
               <div class="flex flex-wrap">
-              <div :key="photo._id" v-for="(photo) in photos" class="flex items-center">
-                <div class="h-32 w-32 object-cover relative">
-                  <img class="" v-if="photo.photo && photo.type !== 'uploading'" :src="`${apiURL}${photo.photo.url}`" alt="">
-                  <button class="absolute text-white rounded-lg bg-red-500 bottom-0 right-0 select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">X</button>
+                <div :key="photo._id" v-for="(photo) in photos" class="inline-flex items-center">
+                  <div v-if="photo.photo && photo.type !== 'uploading'" class="h-32 w-32 object-cover relative">
+                    <img class="" :src="`${apiURL}${photo.photo.url}`" alt="">
+                    <button class="absolute text-white rounded-lg bg-red-500 bottom-0 right-0 select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">X</button>
+                  </div>
+                  <img class="h-32 w-32 object-cover opacity-50" v-if="photo.type === 'uploading'" :src="`${photo.blobURL}`" alt="">
+                  <div v-if="photo.type === 'rendering'">
+                    Making GIF
+                  </div>
+                  <!-- <div v-if="photo.type === 'uploading'">
+                    Loading {{ photo.progress }}
+                  </div> -->
+                  <!-- <div v-if="photo.type !== 'uploading'">
+                    <button class=" select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">Delete</button>
+                  </div>
+                  <div v-if="mode === 'selecting'">
+                    <input type="checkbox" v-model="photo.selected" @input="$nextTick($forceUpdate)">
+                  </div> -->
                 </div>
-                <img class="h-32 w-32 object-cover opacity-50" v-if="photo.type === 'uploading'" :src="`${photo.blobURL}`" alt="">
-                <div v-if="photo.type === 'rendering'">
-                  Making GIF
-                </div>
-                <!-- <div v-if="photo.type === 'uploading'">
-                  Loading {{ photo.progress }}
-                </div> -->
-                <!-- <div v-if="photo.type !== 'uploading'">
-                  <button class=" select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">Delete</button>
-                </div>
-                <div v-if="mode === 'selecting'">
-                  <input type="checkbox" v-model="photo.selected" @input="$nextTick($forceUpdate)">
-                </div> -->
               </div>
-            </div>
             </div>
           </div>
           <div class="flex justify-center full relative" v-show="!requestCamera">
@@ -57,8 +57,8 @@
             <canvas ref="canvas" style="display: none"></canvas>
             <div class="last-photo disable-dbl-tap-zoom" @click="requestCamera = true">
               <div class="" v-if="photos && photos.length > 0">
-                <img v-if="this.photos[this.photos.length - 1].type === 'uploading'" :src="this.photos[this.photos.length - 1].blobURL" alt="">
-                <img v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="apiURL + this.photos[this.photos.length - 1].photo.url" alt="">
+                <img class="snaponce" v-if="this.photos[this.photos.length - 1].type === 'uploading'" :src="this.photos[this.photos.length - 1].blobURL" alt="">
+                <img class="snaponce" v-if="this.photos[this.photos.length - 1].photo && this.photos[this.photos.length - 1].type !== 'uploading'" :src="apiURL + this.photos[this.photos.length - 1].photo.url" alt="">
               </div>
             </div>
             <div class="snap-btn disable-dbl-tap-zoom" @click="snapOnce">
