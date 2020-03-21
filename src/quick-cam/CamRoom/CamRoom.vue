@@ -15,7 +15,7 @@
           <div class="text-center pt-12">
             <div class=" text-2xl">Please enter viewer password.</div>
             <div class="">
-              <input type="password" class="bg-gray-200 p-2 w-full mt-3 text-black" v-model="viewPassword">
+              <input type="password" class="bg-gray-200 p-2 w-full mt-3 text-black" @keydown.enter="getPhotosBySlug()" v-model="viewPassword">
               <button @click="getPhotosBySlug()" type="button" class="bg-gray-200 p-2 w-full mt-3 text-black">Enter</button>
             </div>
             <div v-if="failed" class="p-2 text-red-500">
@@ -31,18 +31,23 @@
             <div class="p-2">
               <div class="flex flex-wrap">
               <div :key="photo._id" v-for="(photo) in photos" class="flex items-center">
-                <img class="h-32 w-32 object-cover" v-if="photo.photo && photo.type !== 'uploading'" :src="`${apiURL}${photo.photo.url}`" alt="">
-                <img class="h-32 w-32 object-cover" v-if="photo.type === 'uploading'" :src="`${photo.blobURL}`" alt="">
+                <div class="h-32 w-32 object-cover relative">
+                  <img class="" v-if="photo.photo && photo.type !== 'uploading'" :src="`${apiURL}${photo.photo.url}`" alt="">
+                  <button class="absolute text-white rounded-lg bg-red-500 bottom-0 right-0 select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">X</button>
+                </div>
+                <img class="h-32 w-32 object-cover opacity-50" v-if="photo.type === 'uploading'" :src="`${photo.blobURL}`" alt="">
                 <div v-if="photo.type === 'rendering'">
                   Making GIF
                 </div>
-                <div v-if="photo.type === 'uploading'">
+                <!-- <div v-if="photo.type === 'uploading'">
                   Loading {{ photo.progress }}
-                </div>
-                <div v-if="photo.type !== 'uploading'">
+                </div> -->
+                <!-- <div v-if="photo.type !== 'uploading'">
                   <button class=" select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">Delete</button>
-                  <input type="checkbox" v-model="photo.selected" v-if="mode === 'selecting'" @input="$nextTick($forceUpdate)">
                 </div>
+                <div v-if="mode === 'selecting'">
+                  <input type="checkbox" v-model="photo.selected" @input="$nextTick($forceUpdate)">
+                </div> -->
               </div>
             </div>
             </div>
