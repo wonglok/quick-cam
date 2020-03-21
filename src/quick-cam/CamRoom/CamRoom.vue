@@ -177,6 +177,8 @@ export default {
       const photoSelected = this.photos.filter(e => e.selected).slice()
       this.photos.filter(e => e.selected).forEach((photo) => {
         const idx = this.photos.findIndex(e => e._id === photo._id)
+        this.socket.emit('remove-album-item', photo)
+
         this.photos.splice(idx, 1)
       })
 
@@ -189,6 +191,8 @@ export default {
     async removePhoto ({ photo }) {
       const idx = this.photos.findIndex(e => e._id === photo._id)
       this.photos.splice(idx, 1)
+
+      this.socket.emit('remove-album-item', photo)
 
       const data = await cAPI.removePhotosIn({
         photoIDs: [photo._id],
