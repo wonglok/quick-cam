@@ -50,6 +50,12 @@ const routes = [
     component: () => import('../quick-cam/CamRoom/CamRoom.vue')
   }
 ]
+if (process.env.NODE_ENV === 'development') {
+  routes.unshift({
+    path: '/ui',
+    component: () => import('../human/server-ui/TuneUI.vue')
+  })
+}
 
 const router = new VueRouter({
   mode: 'history',
