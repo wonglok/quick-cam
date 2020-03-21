@@ -174,7 +174,7 @@ export const uploadPhoto = async ({ name, blob, albumID, filename = 'image.jpg',
     url: `/photos`,
     data: formData,
     onUploadProgress: (progressEvent) => {
-      var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+      var percentCompleted = ((progressEvent.loaded) / progressEvent.total)
       progress(percentCompleted)
     }
   })

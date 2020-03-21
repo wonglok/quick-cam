@@ -171,8 +171,8 @@ export default {
           }
           this.photos.push(obj)
           const progress = (v) => {
-            obj.progress = v
-            console.log(v)
+            obj.progress = (v * 100) + '%'
+            this.$forceUpdate()
           }
           const data = await cAPI.uploadPhoto({ name: 'loklok', blob, albumID: this.room._id, progress })
           const idx = this.photos.findIndex(p => p._id === obj._id)
