@@ -40,7 +40,7 @@
               <div class="flex flex-wrap">
                 <div :key="photo._id" v-for="(photo) in photos.slice()" class="inline-flex items-center relative">
                   <div v-if="photo.photo && photo.type !== 'uploading'" class="h-32 w-32 object-cover relative">
-                    <img class="" :src="`${getImageLink(photo)}`" alt="">
+                    <img class="h-32 w-32 object-cover" :src="`${getThumbLink(photo)}`" alt="">
                     <button class="absolute text-white rounded-lg bg-red-500 bottom-0 right-0 select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">X</button>
                   </div>
                   <img class="h-32 w-32 object-cover" :style="{ background: 'rgba(0,0,0,0.5)' }" v-if="photo.type === 'uploading'" :src="`${getImageLink(photo)}`" alt="">
@@ -64,6 +64,7 @@
           <div class="flex justify-center full relative" v-show="!showGallery">
             <video class="h-full w-full object-cover bg-gray-200" :class="{ snapping: snapping, snaponce: snaponce }" playsinline ref="video"></video>
             <canvas ref="canvas" style="display: none"></canvas>
+            <canvas ref="thumb" style="display: none"></canvas>
             <div class="last-photo disable-dbl-tap-zoom" @click="showGallery = true">
               <div class="" v-if="photos && photos.length > 0">
                 <img class="snaponce" v-if="this.photos[this.photos.length - 1].type === 'uploading'" :src="getImageLink(this.photos[this.photos.length - 1])" alt="">
@@ -85,10 +86,14 @@ export default {
   computed: {
     slug () {
       return this.$route.params.slug
+    },
+    socket () {
+      return this.adapter.socket
     }
   },
   data () {
     return {
+      adapter: cAPI.getSocketAdapter(),
       viewPassword: '',
       notFound: false,
       mode: 'normal',
@@ -119,7 +124,6 @@ export default {
     if (this.viewPassword) {
       this.getPhotosBySlug()
     }
-
     // debug
     // this.viewPassword = '1234'
     // this.getPhotosBySlug()
@@ -130,11 +134,18 @@ export default {
       this.$forceUpdate()
       this.showBlocker = true
     },
-    getImageLink (photo) {
-      if (photo.blobURL) {
-        return photo.blobURL
+    getImageLink (item) {
+      if (item.blobURL) {
+        return item.blobURL
       } else {
-        return `${cAPI.apiURL}${photo.photo.url}`
+        return `${cAPI.apiURL}${item.photo.url}`
+      }
+    },
+    getThumbLink (item) {
+      if (item.blobURL) {
+        return item.blobURL
+      } else {
+        return `${cAPI.apiURL}${item.thumb.url}`
       }
     },
     async startSelect () {
@@ -191,8 +202,11 @@ export default {
       const video = this.$refs.video
       const width = this.photo.width
       const height = this.photo.height
+      var thumbCTX = this.$refs.thumb.getContext('2d')
+      thumbCTX.canvas.width = 256
+      thumbCTX.canvas.height = 256
       var context = canvas.getContext('2d')
-      context.fillStyle = '#AAA'
+      context.fillStyle = '#FFF'
       context.fillRect(0, 0, canvas.width, canvas.height)
       if (width && height) {
         canvas.width = width
@@ -255,16 +269,23 @@ export default {
         }
         /* eslint-enable */
         drawImageProp(context, video, 0, 0, width, height)
-        // context.drawImage(video, 0, 0, width, height)
+        drawImageProp(thumbCTX, video, 0, 0, thumbCTX.canvas.width, thumbCTX.canvas.height)
 
-        canvas.toBlob(async (blob) => {
+        // context.drawImage(video, 0, 0, width, height)
+        const getPhotoBlob = () => new Promise((resolve) => {
+          canvas.toBlob(resolve, 'image/jpeg', 0.5)
+        })
+        const getThumbBlob = () => new Promise((resolve) => {
+          thumbCTX.canvas.toBlob(resolve, 'image/jpeg', 0.7)
+        })
+        const upload = async ({ photoBlob, thumbBlob }) => {
           this.snaponce = false
           const obj = {
             type: 'uploading',
             _id: Math.random(),
             progress: 0,
             opacity: 0,
-            blobURL: URL.createObjectURL(new Blob([blob], { type: 'image/jpeg' }))
+            blobURL: URL.createObjectURL(new Blob([photoBlob], { type: 'image/jpeg' }))
           }
           this.photos.push(obj)
           const progress = (v) => {
@@ -272,14 +293,22 @@ export default {
             obj.opacity = v + 0.1
             this.$forceUpdate()
           }
-          const data = await cAPI.uploadPhoto({ name: 'loklok', blob, albumID: this.room._id, progress })
+          const data = await cAPI.uploadPhoto({ name: 'loklok', photoBlob, thumbBlob, albumID: this.room._id, progress })
           const idx = this.photos.findIndex(p => p._id === obj._id)
           data.blobURL = obj.blobURL
           this.photos[idx] = data
-          console.log(data)
+          const sender = JSON.parse(JSON.stringify(data))
+          sender.blobURL = false
+          this.socket.emit('add-album-item', sender)
           this.$forceUpdate()
-          // await this.getPhotosBySlug()
-        }, 'image/jpeg', 0.2)
+        }
+        const [
+          photoBlob, thumbBlob
+        ] = await Promise.all([
+          getPhotoBlob(), getThumbBlob()
+        ])
+        upload({ photoBlob, thumbBlob })
+        // await this.getPhotosBySlug()
       }
     },
     async openCamera () {
@@ -308,12 +337,49 @@ export default {
       try {
         this.wrongPassword = false
         this.photos = await cAPI.getPhotosBySlug({ slug: this.slug, viewPassword: this.viewPassword })
-        console.log(this.photos)
+        this.setupEvents()
         this.showBlocker = false
         this.$nextTick(this.openCamera)
       } catch (e) {
         this.wrongPassword = true
       }
+    },
+    setupEvents () {
+      this.socket.on('add-album-item', (data, socketID) => {
+        const mySocketID = this.socket.id
+        if (mySocketID === socketID) {
+          console.log('same, add')
+        } else {
+          console.log('add-album-item', data)
+          this.photos.push(data)
+        }
+      })
+      this.socket.on('remove-album-item', (data, socketID) => {
+        const mySocketID = this.socket.id
+        if (mySocketID === socketID) {
+          console.log('same, remove')
+        } else {
+          console.log('remove-album-item', data)
+          this.photos.splice(this.photos.findIndex(p => p._id === data._id), 1)
+        }
+      })
+      this.socket.on('update-album-item', (data, socketID) => {
+        const mySocketID = this.socket.id
+        if (mySocketID === socketID) {
+          console.log('same, update')
+        } else {
+          console.log('update-album-item', data)
+          const idx = this.photos.findIndex(p => p._id === data._id)
+          this.photos[idx] = data
+        }
+      })
+      // this.socket.emit('add-album-item', {
+      //   albumID: '123',
+      //   def: 546
+      // })
+      this.socket.emit('join-album', { albumID: this.room._id }, () => {
+        console.log('join-album')
+      })
     }
   }
 }

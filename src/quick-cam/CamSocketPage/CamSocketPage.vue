@@ -30,10 +30,10 @@ export default {
         }
         console.log('add-room-item', data)
       })
-      this.socket.on('remove-room-item', (data) => {
+      this.socket.on('remove-room-item', (data, socketID) => {
         console.log('remove-room-item', data)
       })
-      this.socket.on('update-room-item', (data) => {
+      this.socket.on('update-room-item', (data, socketID) => {
         console.log('update-room-item', data)
       })
       this.socket.emit('join', { roomID: '123' })

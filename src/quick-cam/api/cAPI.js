@@ -32,16 +32,16 @@ export const getSocketAdapter = () => {
   NSIO.open()
 
   // const p2p = new P2P(NSIO)
-  const onReady = () => {
-    return new Promise((resolve) => {
-      NSIO.on('connection', (socket) => {
-        resolve(socket)
-      })
-    })
-  }
+  // const onReady = () => {
+  //   return new Promise((resolve) => {
+  //     NSIO.on('connection', (socket) => {
+  //       resolve(socket)
+  //     })
+  //   })
+  // }
   return {
-    socket: NSIO,
-    onReady
+    socket: NSIO
+    // onReady
     // p2p
   }
 }
@@ -158,9 +158,10 @@ export function dataURItoBlob (dataURI) {
   return new Blob([ab], { type: mimeString })
 }
 
-export const uploadPhoto = async ({ name, blob, albumID, filename = 'image.jpg', progress = () => {} }) => {
+export const uploadPhoto = async ({ name, photoBlob, thumbBlob, albumID, photoname = 'photo.jpg', thumbname = 'thumb.jpg', progress = () => {} }) => {
   const formData = new FormData()
-  formData.append(`files.photo`, new File([blob], filename), filename)
+  formData.append(`files.photo`, new File([photoBlob], photoname), photoname)
+  formData.append(`files.thumb`, new File([thumbBlob], thumbname), thumbname)
   formData.append(`data`, JSON.stringify({
     desc: 'desc',
     albumID: albumID,
