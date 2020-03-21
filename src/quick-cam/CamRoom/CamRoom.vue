@@ -37,7 +37,7 @@
                   Making GIF
                 </div>
                 <div v-if="photo.type === 'uploading'">
-                  Loading
+                  Loading {{ photo.progress }}
                 </div>
                 <div v-if="photo.type !== 'uploading'">
                   <button class=" select-none disable-dbl-tap-zoom p-2 m-2 border" v-if="mode === 'normal'" @click="removePhoto({ photo, photos })">Delete</button>
@@ -78,8 +78,8 @@ export default {
       mode: 'normal',
       apiURL: cAPI.apiURL,
       photo: {
-        height: 512,
-        width: 512
+        height: 128,
+        width: 128
       },
       snapping: false,
       snaponce: false,
@@ -95,8 +95,8 @@ export default {
     await this.loadRoom()
 
     // debug
-    this.viewPassword = '1234'
-    this.getPhotosBySlug()
+    // this.viewPassword = '1234'
+    // this.getPhotosBySlug()
   },
   methods: {
     async startSelect () {
@@ -166,10 +166,14 @@ export default {
           const obj = {
             type: 'uploading',
             _id: Math.random(),
+            progress: 0,
             blobURL: URL.createObjectURL(new Blob([blob], { type: 'image/jpeg' }))
           }
           this.photos.push(obj)
-          const progress = (v) => console.log(v)
+          const progress = (v) => {
+            obj.progress = v
+            console.log(v)
+          }
           const data = await cAPI.uploadPhoto({ name: 'loklok', blob, albumID: this.room._id, progress })
           const idx = this.photos.findIndex(p => p._id === obj._id)
           this.photos[idx] = data
