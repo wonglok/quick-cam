@@ -19,7 +19,7 @@
   "dependencies": {
     "@seregpie/three.text-texture": "^2.0.1",
     "@tweenjs/tween.js": "^18.5.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "expr-eval": "^2.0.2",
     "gifshot": "^0.4.5",
     "socket.io-client": "^2.3.0",
