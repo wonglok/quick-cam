@@ -44,7 +44,7 @@
     "eslint-plugin-vue": "^6.1.2",
     "express": "^4.17.1",
     "lowdb": "^1.0.0",
-    "minimist": ">=1.2.2",
+    "minimist": ">=1.2.6",
     "nodemon": "^2.0.2",
     "raw-loader": "^4.0.0",
     "socket.io": "^2.3.0",
